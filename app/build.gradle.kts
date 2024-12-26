@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+    id ("com.google.devtools.ksp") version "2.1.0-1.0.28"
 }
 
 android {
@@ -68,5 +69,62 @@ dependencies {
      */
     implementation(libs.kotlinx.serialization.json)
 
+    /**
+     * ViewModel
+     */
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    /**
+     * Kotlin Coroutines
+     */
+    implementation(libs.kotlinx.coroutines.android)
+
+    /**
+     * Room database
+     */
+    implementation (libs.androidx.room.runtime)
+    ksp (libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    /**
+     * Coil
+     */
+    implementation(libs.coil) // Core library
+    implementation(libs.coil.compose) // for Jetpack Compose
+
+    /**
+     * Gson
+     */
+    implementation (libs.gson)  // For serialization
+
+    /**
+     * SystemUIController
+     */
+    implementation (libs.accompanist.systemuicontroller)
+
+    /**
+     * Koin
+     */
+    // Koin BOM (Bill of Materials) kutubxonasi
+    implementation(platform("io.insert-koin:koin-bom:4.0.0"))
+
+    // Koin uchun asosiy kutubxona
+    implementation("io.insert-koin:koin-core")
+
+    // Android va Jetpack Compose qo'llab-quvvatlashi
+    implementation("io.insert-koin:koin-android")
+    implementation("io.insert-koin:koin-androidx-compose")
+
+    /**
+     * Ktor
+     */
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation (libs.ktor.client.serialization)
+    // Content Negotiation uchun
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    // Logging uchun
+    implementation(libs.ktor.client.logging)
 
 }

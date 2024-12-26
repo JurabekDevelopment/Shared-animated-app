@@ -5,6 +5,7 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,7 +26,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens.Main
 @Composable
 fun MyNavigation(modifier: Modifier = Modifier,navController : NavHostController) {
 
-    val fabColor = Color.Green
+    val fabColor = MaterialTheme.colorScheme.tertiaryContainer
     SharedTransitionLayout {
         NavHost(
             navController = navController,
