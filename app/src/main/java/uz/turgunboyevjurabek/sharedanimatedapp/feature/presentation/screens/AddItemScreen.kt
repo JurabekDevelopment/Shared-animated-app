@@ -1,10 +1,12 @@
-@file:OptIn(ExperimentalSharedTransitionApi::class)
+@file:OptIn(ExperimentalSharedTransitionApi::class, ExperimentalSharedTransitionApi::class)
 
 package uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens
 
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.graphics.fonts.Font
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -39,17 +42,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import org.koin.androidx.compose.koinViewModel
 import org.w3c.dom.Text
 import uz.turgunboyevjurabek.sharedanimatedapp.R
 import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.ConstItems.FAB_EXPLODE_BOUNDS_KEY
+import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
+import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
 
 @Composable
 fun SharedTransitionScope.AddItemScreen(
     fabColor: Color,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    viewModel: RoomViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -63,7 +71,8 @@ fun SharedTransitionScope.AddItemScreen(
      * Rasm tanlash uchun launcher
      */
     val launcher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent(),
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent(),
             onResult = { uri: Uri? ->
                 uri?.let {
                     // Doimiy ruxsat olish
@@ -119,6 +128,26 @@ fun SharedTransitionScope.AddItemScreen(
                 .fillMaxWidth()
         )
 
+        Button(
+            onClick = {
+                if (selectedImageUri != null && labelText.isNotEmpty() && descriptionText.isNotEmpty()) {
+                    val item=Item(
+                        title = labelText,
+                        description = descriptionText,
+                        imageUrl = selectedImageUri.toString()
+                    )
+                    viewModel.insertItem(item)
+                    Toast.makeText(context, "Qushildi", Toast.LENGTH_SHORT).show()
+//                    selectedImageUri = null
+//                    labelText = ""
+//                    descriptionText = ""
+                } else {
+                    Toast.makeText(context, "Ma'lumotlarni to'liq kiriting", Toast.LENGTH_SHORT).show()
+                }
+            }
+        ) {
+            Text("Qoshish", fontFamily = FontFamily.Serif)
+        }
     }
 }
 

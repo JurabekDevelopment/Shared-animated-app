@@ -8,7 +8,8 @@ fun Item.toItemEntity(): ItemEntity {
         id = this.id,
         title = this.title,
         description = this.description,
-        imageUrl = this.imageUrl
+        imageUrl = this.imageUrl,
+        timestamp=this.timestamp
     )
 
 }

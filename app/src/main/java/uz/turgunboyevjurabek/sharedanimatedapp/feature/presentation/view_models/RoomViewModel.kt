@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.MyResult
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
@@ -13,6 +15,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.use_case.DeleteIte
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.use_case.GetAllItemUseCase
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.use_case.InsertItemUseCase
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.use_case.UpdateItemUseCase
+import kotlin.coroutines.cancellation.CancellationException
 
 class RoomViewModel(
     private val getAllItemUseCase: GetAllItemUseCase,
@@ -26,23 +29,25 @@ class RoomViewModel(
 
     init {
         viewModelScope.launch {
-            getAllItems()
+            getAllItems2()
         }
     }
 
-    private suspend fun getAllItems(){
-            _getAllItems.value = MyResult.loading("Loading")
-            try {
-                getAllItemUseCase().collect {
-                    _getAllItems.value.data = it
-                }
-                _getAllItems.value = MyResult.success(_getAllItems.value.data!!)
-
-            }catch (e:Exception){
-                _getAllItems.value = MyResult.error(e.message.toString())
-                Log.d("Error at ViewModel", e.message.toString())
-            }
+    private fun getAllItems2(){
+        viewModelScope.launch {
+           getAllItemUseCase()
+               .onStart {
+                   _getAllItems.value = MyResult.loading("Loading")
+               }
+               .catch {e->
+                   _getAllItems.value = MyResult.error(e.message ?: "An unexpected error occurred")
+                Log.e("Error at ViewModel", e.localizedMessage ?: "Unknown error")
+               }
+               .collect{ items ->
+                   _getAllItems.value = MyResult.success(items)
+               }
         }
+    }
 
     fun insertItem(item: Item){
         viewModelScope.launch {
