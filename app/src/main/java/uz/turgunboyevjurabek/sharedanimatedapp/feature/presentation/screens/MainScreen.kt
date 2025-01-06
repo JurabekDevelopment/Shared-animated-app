@@ -2,6 +2,7 @@
 
 package uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -30,12 +31,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -45,6 +50,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import uz.turgunboyevjurabek.sharedanimatedapp.R
@@ -54,6 +60,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun SharedTransitionScope.MainScreen(
     fabColor: Color,
@@ -62,8 +69,10 @@ fun SharedTransitionScope.MainScreen(
     viewModel: RoomViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
-
+    val scope= rememberCoroutineScope()
     val roomViewModel by viewModel.getAllItems.collectAsStateWithLifecycle()
+    val itemList = ArrayList<Item>()
+    roomViewModel.data?.let { itemList.addAll(it.toMutableList()) }
 
     Scaffold(
         floatingActionButton = {
@@ -115,27 +124,16 @@ fun SharedTransitionScope.MainScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    roomViewModel.data?.let { items ->
-                        items(items.size) { index ->
-                            ItemCard(
-                                item = items[index],
-                                modifier = Modifier.padding(8.dp)
-                            )
-                        }
-                    } ?: run {
-                        // Agar data null bo'lsa, boshqa UI ko'rsatish
-                        item {
-                            Text(
-                                text = "No data available",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                    items(itemList.size){
+                        ItemCard(
+                            item = itemList[it],
+                            modifier = modifier
+                                .padding(10.dp)
+                        )
                     }
                 }
-
             }
         }
-
 
     }
 

@@ -9,7 +9,6 @@ fun Item.toItemEntity(): ItemEntity {
         title = this.title,
         description = this.description,
         imageUrl = this.imageUrl,
-        timestamp=this.timestamp
     )
 
 }

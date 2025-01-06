@@ -26,14 +26,18 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,38 +48,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.w3c.dom.Text
 import uz.turgunboyevjurabek.sharedanimatedapp.R
 import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.ConstItems.FAB_EXPLODE_BOUNDS_KEY
+import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status
+import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
-
 @Composable
 fun SharedTransitionScope.AddItemScreen(
     fabColor: Color,
     animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: RoomViewModel = koinViewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController
 ) {
     val context = LocalContext.current
+    val state by viewModel.addItem.collectAsStateWithLifecycle()
 
-    /**
-     * Tanlangan rasmning Uri'sini saqlash uchun state
-     */
     var selectedImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-
-    /**
-     * Rasm tanlash uchun launcher
-     */
     val launcher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent(),
             onResult = { uri: Uri? ->
                 uri?.let {
-                    // Doimiy ruxsat olish
                     context.contentResolver.takePersistableUriPermission(
                         it, Intent.FLAG_GRANT_READ_URI_PERMISSION
                     )
@@ -83,9 +85,16 @@ fun SharedTransitionScope.AddItemScreen(
                 }
             })
 
-
+    val scope= rememberCoroutineScope()
     var labelText by rememberSaveable { mutableStateOf("") }
     var descriptionText by rememberSaveable { mutableStateOf("") }
+
+    // SUCCESS holatini boshqarish
+//    LaunchedEffect(state.status) {
+//        if (state.status == Status.SUCCESS) {
+//            Toast.makeText(context, "Yaxshi - ${state.data}", Toast.LENGTH_SHORT).show()
+//        }
+//    }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -101,13 +110,11 @@ fun SharedTransitionScope.AddItemScreen(
             )
     ) {
         AsyncImage(
-            model = if (selectedImageUri != null) selectedImageUri else R.drawable.img,
+            model = selectedImageUri ?: R.drawable.img,
             contentDescription = null,
             modifier = modifier
                 .statusBarsPadding()
-                .clickable { // Rasm tanlash uchun galereyani ochish
-                    launcher.launch("image/*")
-                }
+                .clickable { launcher.launch("image/*") }
                 .fillMaxWidth()
                 .height(300.dp)
         )
@@ -127,20 +134,23 @@ fun SharedTransitionScope.AddItemScreen(
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth()
         )
-
         Button(
             onClick = {
                 if (selectedImageUri != null && labelText.isNotEmpty() && descriptionText.isNotEmpty()) {
-                    val item=Item(
+                    val item = Item(
                         title = labelText,
                         description = descriptionText,
                         imageUrl = selectedImageUri.toString()
                     )
-                    viewModel.insertItem(item)
-                    Toast.makeText(context, "Qushildi", Toast.LENGTH_SHORT).show()
-//                    selectedImageUri = null
-//                    labelText = ""
-//                    descriptionText = ""
+                    scope.launch {
+                        viewModel.insertItem(item)
+                    }
+                    // Ma'lumotlarni tozalash
+                    selectedImageUri = null
+                    labelText = ""
+                    descriptionText = ""
+                    navController.popBackStack()
+
                 } else {
                     Toast.makeText(context, "Ma'lumotlarni to'liq kiriting", Toast.LENGTH_SHORT).show()
                 }

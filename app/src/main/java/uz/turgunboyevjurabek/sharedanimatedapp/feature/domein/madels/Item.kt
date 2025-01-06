@@ -5,5 +5,4 @@ data class Item(
     val title:String,
     val description:String,
     val imageUrl: String,
-    val timestamp: Long = System.currentTimeMillis()
 )

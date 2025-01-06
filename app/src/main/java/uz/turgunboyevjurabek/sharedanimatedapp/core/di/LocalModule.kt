@@ -13,7 +13,6 @@ val localModule = module {
             ItemDataBase::class.java,
             "MyItemDataBase"
         ).fallbackToDestructiveMigration()
-//            .allowMainThreadQueries()
             .build()
     }
 

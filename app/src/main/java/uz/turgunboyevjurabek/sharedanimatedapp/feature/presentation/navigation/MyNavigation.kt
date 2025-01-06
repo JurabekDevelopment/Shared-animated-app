@@ -47,7 +47,8 @@ fun MyNavigation(modifier: Modifier = Modifier,navController : NavHostController
             composable<AddItemRout> {
                 AddItemScreen(
                     fabColor = fabColor,
-                    animatedVisibilityScope = this
+                    animatedVisibilityScope = this,
+                    navController = navController
                 )
             }
         }
