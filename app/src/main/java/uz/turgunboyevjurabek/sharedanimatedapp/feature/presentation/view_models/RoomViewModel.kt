@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.serializer
 import okhttp3.internal.notify
 import okhttp3.internal.notifyAll
@@ -61,10 +63,14 @@ class RoomViewModel(
     suspend fun insertItem(item: Item) {
             _addItem.value = MyResult.loading("Loading")
             try {
-                insertItemUseCase(item)
-                _addItem.value = MyResult.success(item)
-                // State-ni idle holatiga qaytarish
-                _addItem.value = MyResult.idle()
+                coroutineScope {
+                    withContext(Dispatchers.IO){
+                        insertItemUseCase(item)
+                        _addItem.value = MyResult.success(item)
+                    }
+                }
+//                // State-ni idle holatiga qaytarish
+//                _addItem.value = MyResult.idle()
             } catch (e: Exception) {
                 _addItem.value = MyResult.error(e.message ?: "An unexpected error occurred")
             }

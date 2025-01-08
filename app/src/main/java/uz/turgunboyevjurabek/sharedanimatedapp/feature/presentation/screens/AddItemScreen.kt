@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,6 +74,7 @@ fun SharedTransitionScope.AddItemScreen(
     navController: NavHostController
 ) {
     val state by viewModel.addItem.collectAsStateWithLifecycle()
+    val context= LocalContext.current
 
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -84,34 +86,42 @@ fun SharedTransitionScope.AddItemScreen(
                 sharedContentState = rememberSharedContentState(
                     key = FAB_EXPLODE_BOUNDS_KEY
                 ),
-                animatedVisibilityScope = animatedVisibilityScope
+                animatedVisibilityScope = animatedVisibilityScope,
+                zIndexInOverlay = 10f,
+                boundsTransform = { initialBounds, targetBounds ->
+                    spring(
+                        dampingRatio = 0.8f,
+                        stiffness = 380f
+                    )
+                },
             )
     ) {
-        when(state.status){
-            DEFAULT -> {
-                DefaultAndSuccessInsertScreen(
-                    fabColor = fabColor,
-                    navController = navController,
-                )
-            }
-            LOADING -> {
-                LoadingAddItemScreen()
-//                LaunchedEffect(Unit){
-//                    delay(1000)
-//                }
-            }
-            ERROR -> {
-                Text("${state.message}")
-                Log.d("error text","${state.message}")
-            }
-            SUCCESS -> {
-                DefaultAndSuccessInsertScreen(
-                    fabColor = fabColor,
-                    navController = navController,
-                )
-                navController.popBackStack()
-            }
-        }
+        DefaultAndSuccessInsertScreen(
+            fabColor = fabColor,
+            navController = navController,
+        )
+//        when(state.status){
+//            DEFAULT -> {
+//                DefaultAndSuccessInsertScreen(
+//                    fabColor = fabColor,
+//                    navController = navController,
+//                )
+//                Toast.makeText(context, "Default", Toast.LENGTH_SHORT).show()
+//            }
+//            LOADING -> {
+//                LoadingAddItemScreen()
+//                Toast.makeText(context, "Loading", Toast.LENGTH_SHORT).show()
+//            }
+//            ERROR -> {
+//                Text("${state.message}")
+//                Log.d("error text","${state.message}")
+//                Toast.makeText(context, "Error ${state.message}", Toast.LENGTH_SHORT).show()
+//            }
+//            SUCCESS -> {
+//                navController.popBackStack()
+//                Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
+//            }
+//        }
     }
 }
 
