@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import android.graphics.fonts.Font
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.w3c.dom.Text
@@ -61,6 +63,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status
 import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
+
 @Composable
 fun SharedTransitionScope.AddItemScreen(
     fabColor: Color,
@@ -69,9 +72,68 @@ fun SharedTransitionScope.AddItemScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
-    val context = LocalContext.current
     val state by viewModel.addItem.collectAsStateWithLifecycle()
 
+    Column(
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .background(fabColor)
+            .fillMaxSize()
+            .sharedBounds(
+                sharedContentState = rememberSharedContentState(
+                    key = FAB_EXPLODE_BOUNDS_KEY
+                ),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+    ) {
+        when(state.status){
+            DEFAULT -> {
+                DefaultAndSuccessInsertScreen(
+                    fabColor = fabColor,
+                    navController = navController,
+                )
+            }
+            LOADING -> {
+                LoadingAddItemScreen()
+//                LaunchedEffect(Unit){
+//                    delay(1000)
+//                }
+            }
+            ERROR -> {
+                Text("${state.message}")
+                Log.d("error text","${state.message}")
+            }
+            SUCCESS -> {
+                DefaultAndSuccessInsertScreen(
+                    fabColor = fabColor,
+                    navController = navController,
+                )
+                navController.popBackStack()
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingAddItemScreen() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+    ){
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun DefaultAndSuccessInsertScreen(
+    fabColor: Color,
+    viewModel: RoomViewModel = koinViewModel(),
+    modifier: Modifier = Modifier,
+    navController: NavHostController
+) {
+    val context = LocalContext.current
     var selectedImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     val launcher =
         rememberLauncherForActivityResult(
@@ -89,25 +151,13 @@ fun SharedTransitionScope.AddItemScreen(
     var labelText by rememberSaveable { mutableStateOf("") }
     var descriptionText by rememberSaveable { mutableStateOf("") }
 
-    // SUCCESS holatini boshqarish
-//    LaunchedEffect(state.status) {
-//        if (state.status == Status.SUCCESS) {
-//            Toast.makeText(context, "Yaxshi - ${state.data}", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .background(fabColor)
             .fillMaxSize()
-            .sharedBounds(
-                sharedContentState = rememberSharedContentState(
-                    key = FAB_EXPLODE_BOUNDS_KEY
-                ),
-                animatedVisibilityScope = animatedVisibilityScope
-            )
+
     ) {
         AsyncImage(
             model = selectedImageUri ?: R.drawable.img,
@@ -145,11 +195,12 @@ fun SharedTransitionScope.AddItemScreen(
                     scope.launch {
                         viewModel.insertItem(item)
                     }
+
                     // Ma'lumotlarni tozalash
                     selectedImageUri = null
                     labelText = ""
                     descriptionText = ""
-                    navController.popBackStack()
+
 
                 } else {
                     Toast.makeText(context, "Ma'lumotlarni to'liq kiriting", Toast.LENGTH_SHORT).show()
@@ -159,6 +210,7 @@ fun SharedTransitionScope.AddItemScreen(
             Text("Qoshish", fontFamily = FontFamily.Serif)
         }
     }
+
 }
 
 @Composable

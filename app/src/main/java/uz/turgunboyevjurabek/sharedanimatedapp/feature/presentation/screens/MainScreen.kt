@@ -3,6 +3,8 @@
 package uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -60,7 +62,6 @@ import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun SharedTransitionScope.MainScreen(
     fabColor: Color,
@@ -69,8 +70,13 @@ fun SharedTransitionScope.MainScreen(
     viewModel: RoomViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
-    val scope= rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        viewModel.getAllItems()
+    }
+
     val roomViewModel by viewModel.getAllItems.collectAsStateWithLifecycle()
+
+
     val itemList = ArrayList<Item>()
     roomViewModel.data?.let { itemList.addAll(it.toMutableList()) }
 
@@ -90,33 +96,32 @@ fun SharedTransitionScope.MainScreen(
                 Icon(
                     Icons.Rounded.Add,
                     contentDescription = null,
-                    modifier = modifier
-                        .size(50.dp)
+                    modifier = modifier.size(50.dp)
                 )
             }
         }
     ) { innerPadding ->
-        when(roomViewModel.status){
+        when (roomViewModel.status) {
             DEFAULT, LOADING -> {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxSize()
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     CircularProgressIndicator()
                 }
             }
+
             ERROR -> {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxSize()
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Text("Error -> ${roomViewModel.message}")
                 }
             }
+
             SUCCESS -> {
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
@@ -124,19 +129,16 @@ fun SharedTransitionScope.MainScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    items(itemList.size){
-                        ItemCard(
-                            item = itemList[it],
-                            modifier = modifier
-                                .padding(10.dp)
-                        )
-                    }
+                        items(itemList.size) { index ->
+                            ItemCard(
+                                item = itemList[index],
+                                modifier = modifier.padding(10.dp)
+                            )
+                        }
                 }
             }
         }
-
     }
-
 }
 
 @Composable

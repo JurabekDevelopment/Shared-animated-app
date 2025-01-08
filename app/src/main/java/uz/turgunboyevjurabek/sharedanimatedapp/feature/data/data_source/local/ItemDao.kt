@@ -7,13 +7,14 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 
 
 @Dao
 interface ItemDao {
 
     @Query("SELECT * FROM items")
-     fun getAllItems(): Flow<List<ItemEntity>>
+      fun getAllItems(): Flow<List<ItemEntity>>
 
     @Insert
     suspend fun insertItem(item: ItemEntity)

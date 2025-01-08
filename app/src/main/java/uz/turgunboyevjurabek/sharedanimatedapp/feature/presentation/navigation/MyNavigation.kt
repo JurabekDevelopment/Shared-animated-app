@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 
@@ -26,7 +28,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens.Main
 @Composable
 fun MyNavigation(modifier: Modifier = Modifier,navController : NavHostController) {
 
-    val fabColor = MaterialTheme.colorScheme.tertiaryContainer
+    val fabColor = MaterialTheme.colorScheme.inversePrimary
     SharedTransitionLayout {
         NavHost(
             navController = navController,
