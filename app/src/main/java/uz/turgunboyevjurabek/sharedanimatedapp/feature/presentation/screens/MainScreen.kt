@@ -13,10 +13,16 @@ import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -27,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,18 +41,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import coil.request.CachePolicy
@@ -75,7 +88,6 @@ fun SharedTransitionScope.MainScreen(
     }
 
     val roomViewModel by viewModel.getAllItems.collectAsStateWithLifecycle()
-
 
     val itemList = ArrayList<Item>()
     roomViewModel.data?.let { itemList.addAll(it.toMutableList()) }
@@ -129,12 +141,12 @@ fun SharedTransitionScope.MainScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                        items(itemList.size) { index ->
-                            ItemCard(
-                                item = itemList[index],
-                                modifier = modifier.padding(10.dp)
-                            )
-                        }
+                    items(itemList.size) { index ->
+                        ItemCard(
+                            item = itemList[index],
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
                 }
             }
         }
@@ -144,37 +156,71 @@ fun SharedTransitionScope.MainScreen(
 @Composable
 fun ItemCard(
     item: Item,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-//    val randomHeight = (100..300).random()
+    var imageWidth by remember { mutableStateOf(0) }
+    var imageHeight by remember { mutableStateOf(0) }
+
     val imageLoader = ImageLoader.Builder(context)
         .error(R.drawable.ic_launcher_foreground)
         .crossfade(500)
         .placeholder(R.drawable.img)
-        .memoryCachePolicy(CachePolicy.ENABLED) //Keshlash
+        .memoryCachePolicy(CachePolicy.ENABLED)
         .build()
+
     val painter = rememberAsyncImagePainter(
         ImageRequest.Builder(context)
             .data(item.imageUrl)
+            .listener(
+                onSuccess = { _, result ->
+                    // Rasm o'lchamlarini olish va saqlash
+                    val width = result.drawable.intrinsicWidth
+                    val height = result.drawable.intrinsicHeight
+                        imageWidth = width
+                        imageHeight = height
+                }
+            )
+
             .build(),
-        imageLoader = imageLoader
+        imageLoader = imageLoader,
     )
 
     Surface(
+        shape = Shapes().medium,
+        tonalElevation = 1.dp,
         modifier = modifier
-            .height(250.dp)
+            .wrapContentHeight()
+            .padding(8.dp)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Rasm muvaffaqiyatli yuklanganda ko'rsatiladi
             Image(
                 painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.height(150.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(
+                        painter.intrinsicSize.width / painter.intrinsicSize.height
+                    )
+                    .clip(Shapes().medium)
             )
-//            Spacer(modifier = modifier.height(12.dp))
-            Text(item.title)
-            Text(item.description)
+            Spacer(modifier = Modifier.height(7.dp))
+            Text(
+                text = item.title + " - $imageHeight",
+                fontWeight = FontWeight.Black,
+                fontFamily = FontFamily.Serif,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            Text(
+                text = item.description + " Width: $imageWidth",
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
         }
     }
 }
