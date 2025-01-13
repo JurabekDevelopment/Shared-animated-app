@@ -8,6 +8,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onEach
@@ -35,6 +36,13 @@ class RoomViewModel(
 
     private val _getAllItems = MutableStateFlow<MyResult<List<Item>>>(MyResult.idle())
     val getAllItems = _getAllItems.asStateFlow()
+//        .onStart { getAllItems() }
+//        .stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.WhileSubscribed(5000L),
+//            false
+//        )
+
 
     private val _addItem = MutableStateFlow<MyResult<Item>>(MyResult.idle())
     val addItem = _addItem.asStateFlow()

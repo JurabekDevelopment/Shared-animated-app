@@ -12,6 +12,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,11 +28,15 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
@@ -48,12 +53,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
@@ -74,6 +82,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status
 import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
+import coil.imageLoader
 
 @Composable
 fun SharedTransitionScope.MainScreen(
@@ -83,10 +92,9 @@ fun SharedTransitionScope.MainScreen(
     viewModel: RoomViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = true) {
         viewModel.getAllItems()
     }
-
     val roomViewModel by viewModel.getAllItems.collectAsStateWithLifecycle()
 
     val itemList = ArrayList<Item>()
@@ -162,32 +170,29 @@ fun ItemCard(
     var imageWidth by remember { mutableStateOf(0) }
     var imageHeight by remember { mutableStateOf(0) }
 
+    val request = ImageRequest.Builder(context)
+        .data(item.imageUrl)
+        .crossfade(true)
+        .build()
+
     val imageLoader = ImageLoader.Builder(context)
         .error(R.drawable.ic_launcher_foreground)
         .crossfade(500)
         .placeholder(R.drawable.img)
-        .memoryCachePolicy(CachePolicy.ENABLED)
+        .memoryCachePolicy(CachePolicy.ENABLED) // Xotira keshlashni yoqish
+        .diskCachePolicy(CachePolicy.ENABLED) // Disk keshlashni yoqish
         .build()
+    imageLoader.enqueue(request)
 
     val painter = rememberAsyncImagePainter(
         ImageRequest.Builder(context)
             .data(item.imageUrl)
-            .listener(
-                onSuccess = { _, result ->
-                    // Rasm o'lchamlarini olish va saqlash
-                    val width = result.drawable.intrinsicWidth
-                    val height = result.drawable.intrinsicHeight
-                        imageWidth = width
-                        imageHeight = height
-                }
-            )
-
             .build(),
-        imageLoader = imageLoader,
+        imageLoader = imageLoader
     )
 
     Surface(
-        shape = Shapes().medium,
+        shape = Shapes().extraLarge,
         tonalElevation = 1.dp,
         modifier = modifier
             .wrapContentHeight()
@@ -196,9 +201,7 @@ fun ItemCard(
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Rasm muvaffaqiyatli yuklanganda ko'rsatiladi
             Image(
                 painter = painter,
                 contentDescription = null,
@@ -208,19 +211,34 @@ fun ItemCard(
                     .aspectRatio(
                         painter.intrinsicSize.width / painter.intrinsicSize.height
                     )
-                    .clip(Shapes().medium)
+                    .clip(Shapes().large)
             )
             Spacer(modifier = Modifier.height(7.dp))
-            Text(
-                text = item.title + " - $imageHeight",
-                fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Serif,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                text = item.description + " Width: $imageWidth",
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = item.title,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Serif,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    modifier = Modifier.padding(start = 8.dp)
+                        .fillMaxWidth(fraction = 0.72f)
+                )
+                IconButton(
+                    onClick = {},
+                    modifier = Modifier
+                        .padding(end = 5.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.rotate(90f))
+                }
+
+            }
         }
     }
 }
