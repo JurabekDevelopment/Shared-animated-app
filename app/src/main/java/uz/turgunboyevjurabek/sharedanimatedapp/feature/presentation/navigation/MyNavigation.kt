@@ -18,10 +18,12 @@ import androidx.navigation.compose.NavHost
 
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.navigation.AddItemRout
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.navigation.DetailRout
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.navigation.MainRout
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens.AddItemScreen
+import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens.DetailScreen
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.screens.MainScreen
 
 
@@ -40,9 +42,17 @@ fun MyNavigation(modifier: Modifier = Modifier,navController : NavHostController
                 MainScreen(
                     fabColor = fabColor,
                     animatedVisibilityScope = this,
+                    navHostController = navController,
                     onFabClick = {
                         navController.navigate(AddItemRout)
                     }
+                )
+            }
+            composable<DetailRout> {
+                val args = it.toRoute<DetailRout>()
+                DetailScreen(
+                    detailRout = args,
+                    animatedVisibilityScope = this
                 )
             }
 

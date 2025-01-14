@@ -6,7 +6,12 @@ import kotlinx.serialization.Serializable
 data object MainRout
 
 @Serializable
-data object DetailRout
+data class DetailRout(
+    val id:Int?,
+    val title:String?,
+    val description:String?,
+    val imageUrl:String?
+)
 
 @Serializable
 data object AddItemRout

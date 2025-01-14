@@ -8,7 +8,9 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Add
@@ -64,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -83,6 +87,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
 import coil.imageLoader
+import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.navigation.DetailRout
 
 @Composable
 fun SharedTransitionScope.MainScreen(
@@ -90,11 +95,9 @@ fun SharedTransitionScope.MainScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onFabClick: () -> Unit,
     viewModel: RoomViewModel = koinViewModel(),
+    navHostController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(key1 = true) {
-        viewModel.getAllItems()
-    }
     val roomViewModel by viewModel.getAllItems.collectAsStateWithLifecycle()
 
     val itemList = ArrayList<Item>()
@@ -149,11 +152,36 @@ fun SharedTransitionScope.MainScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    items(itemList.size) { index ->
-                        ItemCard(
-                            item = itemList[index],
-                            modifier = Modifier.padding(10.dp)
-                        )
+                    itemsIndexed(itemList) { index, item ->
+                        with(this) {
+                            ItemCard(
+                                item = item,
+                                modifier = Modifier
+                                    .padding(10.dp)
+                                    .clickable {
+                                        navHostController.navigate(
+                                            DetailRout(
+                                                id = index,
+                                                title = item.title,
+                                                description = item.description,
+                                                imageUrl = item.imageUrl
+                                            )
+                                        )
+                                    }
+                                    .sharedBounds(
+                                        sharedContentState = rememberSharedContentState(
+                                            key = "$index"
+                                        ),
+                                        animatedVisibilityScope = animatedVisibilityScope,
+                                        boundsTransform ={initalBounds, finalBounds ->
+                                            spring(
+                                                dampingRatio = 0.8f,
+                                                stiffness = 380f
+                                            )
+                                        }
+                                    )
+                            )
+                        }
                     }
                 }
             }
@@ -227,7 +255,8 @@ fun ItemCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier
+                        .padding(start = 8.dp)
                         .fillMaxWidth(fraction = 0.72f)
                 )
                 IconButton(
@@ -235,7 +264,11 @@ fun ItemCard(
                     modifier = Modifier
                         .padding(end = 5.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.rotate(90f))
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        modifier = Modifier.rotate(90f)
+                    )
                 }
 
             }
