@@ -57,6 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -87,6 +89,7 @@ import uz.turgunboyevjurabek.sharedanimatedapp.core.utils.Status.*
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.domein.madels.Item
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.view_models.RoomViewModel
 import coil.imageLoader
+import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.components.ModernDropdownMenu
 import uz.turgunboyevjurabek.sharedanimatedapp.feature.presentation.navigation.DetailRout
 
 @Composable
@@ -99,6 +102,7 @@ fun SharedTransitionScope.MainScreen(
     modifier: Modifier = Modifier,
 ) {
     val roomViewModel by viewModel.getAllItems.collectAsStateWithLifecycle()
+
 
     val itemList = ArrayList<Item>()
     roomViewModel.data?.let { itemList.addAll(it.toMutableList()) }
@@ -197,6 +201,8 @@ fun ItemCard(
     val context = LocalContext.current
     var imageWidth by remember { mutableStateOf(0) }
     var imageHeight by remember { mutableStateOf(0) }
+    var expanded by remember { mutableStateOf(false) }
+
 
     val request = ImageRequest.Builder(context)
         .data(item.imageUrl)
@@ -219,6 +225,14 @@ fun ItemCard(
         imageLoader = imageLoader
     )
 
+    if (expanded){
+        ModernDropdownMenu(
+            expanded = expanded,
+            item=item,
+            onDismissRequest = { expanded = false },
+            onExpandedChange = { expanded = it }
+        )
+    }
     Surface(
         shape = Shapes().extraLarge,
         tonalElevation = 1.dp,
@@ -260,7 +274,9 @@ fun ItemCard(
                         .fillMaxWidth(fraction = 0.72f)
                 )
                 IconButton(
-                    onClick = {},
+                    onClick = {
+                        expanded = !expanded
+                    },
                     modifier = Modifier
                         .padding(end = 5.dp)
                 ) {

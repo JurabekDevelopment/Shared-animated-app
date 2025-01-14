@@ -89,12 +89,26 @@ class RoomViewModel(
                     _addItem.value = MyResult.success(item)
                 }
             }
-//                // State-ni idle holatiga qaytarish
-//                _addItem.value = MyResult.idle()
         } catch (e: Exception) {
             _addItem.value = MyResult.error(e.message ?: "An unexpected error occurred")
         }
     }
 
+    suspend fun deleteItem(item: Item) {
+        _deleteItem.value = MyResult.loading("Loading")
+        try {
+            coroutineScope {
+                withContext(Dispatchers.IO){
+                    deleteItemUseCase(item)
+                    _deleteItem.value = MyResult.success(item)
+                }
+            }
+
+            }catch (e:Exception){
+                _deleteItem.value = MyResult.error(e.message ?: "An unexpected error occurred")
+
+        }
+
+    }
 
 }
