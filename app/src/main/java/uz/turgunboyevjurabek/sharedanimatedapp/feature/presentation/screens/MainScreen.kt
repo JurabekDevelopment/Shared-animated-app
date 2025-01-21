@@ -26,10 +26,12 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Add
@@ -70,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -106,6 +109,7 @@ fun SharedTransitionScope.MainScreen(
 
     val itemList = ArrayList<Item>()
     roomViewModel.data?.let { itemList.addAll(it.toMutableList()) }
+    val lazyListState = rememberLazyStaggeredGridState()
 
     Scaffold(
         floatingActionButton = {
@@ -148,33 +152,32 @@ fun SharedTransitionScope.MainScreen(
                     Text("Error -> ${roomViewModel.message}")
                 }
             }
-
             SUCCESS -> {
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
+                    state = lazyListState,
                     modifier = modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    itemsIndexed(itemList) { index, item ->
-                        with(this) {
+                    items(itemList, key = { item -> item.id}) { item ->
                             ItemCard(
                                 item = item,
+                                onItemClick = {
+                                    navHostController.navigate(
+                                        DetailRout(
+                                            id = item.id,
+                                            title = item.title,
+                                            description = item.description,
+                                            imageUrl = item.imageUrl
+                                        )
+                                    )
+                                },
                                 modifier = Modifier
                                     .padding(10.dp)
-                                    .clickable {
-                                        navHostController.navigate(
-                                            DetailRout(
-                                                id = index,
-                                                title = item.title,
-                                                description = item.description,
-                                                imageUrl = item.imageUrl
-                                            )
-                                        )
-                                    }
                                     .sharedBounds(
                                         sharedContentState = rememberSharedContentState(
-                                            key = "$index"
+                                            key = "${item.id}"
                                         ),
                                         animatedVisibilityScope = animatedVisibilityScope,
                                         boundsTransform ={initalBounds, finalBounds ->
@@ -191,12 +194,12 @@ fun SharedTransitionScope.MainScreen(
             }
         }
     }
-}
 
 @Composable
 fun ItemCard(
     item: Item,
-    modifier: Modifier = Modifier
+    onItemClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var imageWidth by remember { mutableStateOf(0) }
@@ -234,6 +237,9 @@ fun ItemCard(
         )
     }
     Surface(
+        onClick = {
+            onItemClick()
+        },
         shape = Shapes().extraLarge,
         tonalElevation = 1.dp,
         modifier = modifier
